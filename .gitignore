@@ -1,0 +1,23 @@
+# ---- 개인 트래픽 데이터: 절대 커밋 금지 ----
+captures/
+data/
+*.pcap
+*.pcapng
+*.cap
+packets*.csv
+activity_log_private.*
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
