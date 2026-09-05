@@ -1,4 +1,4 @@
-# 홈 Wi-Fi 에서 내 호스트 트래픽만 30분 캡처 (관리자 PowerShell 에서 실행 권장)
+﻿# 홈 Wi-Fi 에서 내 호스트 트래픽만 30분 캡처 (관리자 PowerShell 에서 실행 권장)
 #   .\scripts\capture.ps1                     -> 30분
 #   .\scripts\capture.ps1 -Minutes 1          -> 1분 (파이프라인 테스트용)
 #   .\scripts\capture.ps1 -Interface "Wi-Fi"  -> 인터페이스 이름 직접 지정

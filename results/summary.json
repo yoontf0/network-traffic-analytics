@@ -1,0 +1,127 @@
+{
+  "my_host": "192.168.x.x",
+  "packets_total": 2452962,
+  "bytes_total": 2964921954,
+  "capture_dropped_packets": 211644,
+  "capture_drop_pct": 7.94,
+  "duration_sec": 1799.8,
+  "duration_min": 30.0,
+  "bins": 30,
+  "tcp_packets": 1119041,
+  "tcp_retrans_packets": 258381,
+  "tcp_retrans_rate_pct_overall": 23.0895,
+  "tcp_spurious_retrans_packets": 601,
+  "tcp_lost_segment_flags": 16388,
+  "tcp_dup_ack_flags": 81324,
+  "rtt_samples": 161132,
+  "rtt_invalid_samples_excluded": 21,
+  "rtt_valid_threshold_s": 3.0,
+  "rtt_mean_ms": 240.022,
+  "rtt_median_ms": 211.565,
+  "rtt_p95_ms": 511.173,
+  "rtt_max_ms": 2204.633,
+  "dns_responses": 2134,
+  "dns_mean_ms": 52.76,
+  "dns_median_ms": 15.858,
+  "dns_p95_ms": 264.399,
+  "dns_max_ms": 1136.948,
+  "throughput_mean_mbps": 13.177,
+  "throughput_max_1min_mbps": 43.079,
+  "ichart": {
+    "rtt_mean": {
+      "center": 145.0216,
+      "sigma_hat": 33.7148,
+      "mr_bar": 38.0303,
+      "ucl": 246.166,
+      "lcl": 43.8771,
+      "n": 30
+    },
+    "retrans_rate": {
+      "center": 5.9082,
+      "sigma_hat": 2.1484,
+      "mr_bar": 2.4234,
+      "ucl": 12.3533,
+      "lcl": 0.0,
+      "n": 30
+    }
+  },
+  "ooc_rtt_bins": 8,
+  "ooc_retrans_bins": 4,
+  "ooc_rtt_segments": [
+    {
+      "start_bin": 0,
+      "end_bin": 1,
+      "start_min": 0.0,
+      "end_min": 2.0,
+      "peak": 341.521,
+      "n_bins": 2,
+      "activity": "웹 서핑",
+      "throughput_down_mbps": 4.181,
+      "throughput_up_mbps": 3.38,
+      "rtt_mean_ms": 324.86,
+      "retrans_rate_pct": 2.946,
+      "lost_seg_pkts": 0,
+      "dupack_pkts": 3333,
+      "dns_mean_ms": 139.64
+    },
+    {
+      "start_bin": 5,
+      "end_bin": 10,
+      "start_min": 5.0,
+      "end_min": 11.0,
+      "peak": 374.776,
+      "n_bins": 6,
+      "activity": "웹 서핑",
+      "throughput_down_mbps": 8.005,
+      "throughput_up_mbps": 5.167,
+      "rtt_mean_ms": 301.67,
+      "retrans_rate_pct": 2.554,
+      "lost_seg_pkts": 18,
+      "dupack_pkts": 15626,
+      "dns_mean_ms": 257.24
+    }
+  ],
+  "ooc_retrans_segments": [
+    {
+      "start_bin": 26,
+      "end_bin": 29,
+      "start_min": 26.0,
+      "end_min": 30.0,
+      "peak": 44.749,
+      "n_bins": 4,
+      "activity": "Ubuntu ISO 다운로드",
+      "throughput_down_mbps": 30.68,
+      "throughput_up_mbps": 2.648,
+      "rtt_mean_ms": 119.88,
+      "retrans_rate_pct": 35.186,
+      "lost_seg_pkts": 16202,
+      "dupack_pkts": 55865,
+      "dns_mean_ms": 85.9
+    }
+  ],
+  "protocol_mix_bytes_pct": {
+    "QUIC": 48.24,
+    "TCP (payload)": 30.6,
+    "TLS/HTTPS": 18.34,
+    "UDP (other)": 2.72,
+    "Other": 0.08,
+    "DNS": 0.02
+  },
+  "activities": [
+    {
+      "start_min": 0,
+      "end_min": 13,
+      "label": "웹 서핑"
+    },
+    {
+      "start_min": 13,
+      "end_min": 23,
+      "label": "유튜브 스트리밍"
+    },
+    {
+      "start_min": 23,
+      "end_min": 30,
+      "label": "Ubuntu ISO 다운로드"
+    }
+  ]
+}

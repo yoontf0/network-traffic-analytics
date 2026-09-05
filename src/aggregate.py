@@ -20,7 +20,8 @@ import pandas as pd
 
 from .config import BIN_SECONDS, MIN_RTT_SAMPLES, PROTOCOL_GROUPS
 
-COUNT_COLS = ["pkts", "tcp_pkts", "retrans_pkts", "spurious_pkts", "rtt_n", "dns_n"]
+COUNT_COLS = ["pkts", "tcp_pkts", "retrans_pkts", "spurious_pkts", "lost_seg_pkts", "ooo_pkts", "dupack_pkts",
+              "rtt_n", "rtt_invalid_n", "dns_n"]
 
 
 def _direction(df: pd.DataFrame, my_ip: str) -> pd.Series:
@@ -48,8 +49,10 @@ def aggregate_bins(df: pd.DataFrame, my_ip: str) -> pd.DataFrame:
     # RTT: 내 호스트로 들어오는 ACK 에 찍힌 ack_rtt 만 (서버 왕복 시간)
     rtt = tcp[(tcp["dir"] == "down") & tcp["ack_rtt"].notna()]
     rtt_g = rtt.groupby("bin")["ack_rtt"]
+    inval = tcp[(tcp["dir"] == "down") & tcp["rtt_invalid"]]
     rtt_df = pd.DataFrame({
         "rtt_n": rtt_g.size(),
+        "rtt_invalid_n": inval.groupby("bin").size(),
         "rtt_mean": rtt_g.mean() * 1000,
         "rtt_max": rtt_g.max() * 1000,
         "rtt_p95": rtt_g.quantile(0.95) * 1000,
@@ -60,6 +63,9 @@ def aggregate_bins(df: pd.DataFrame, my_ip: str) -> pd.DataFrame:
         "tcp_pkts": tcp_g.size(),
         "retrans_pkts": tcp_g["is_loss_retrans"].sum().astype(int),
         "spurious_pkts": tcp_g["is_spurious"].sum().astype(int),
+        "lost_seg_pkts": tcp_g["is_lost_seg"].sum().astype(int),   # 이전 세그먼트 미캡처 (실제 손실 or 캡처 드롭)
+        "ooo_pkts": tcp_g["is_ooo"].sum().astype(int),
+        "dupack_pkts": tcp_g["is_dupack"].sum().astype(int),
     })
     re_df["retrans_rate"] = re_df["retrans_pkts"] / re_df["tcp_pkts"].replace(0, np.nan) * 100
 

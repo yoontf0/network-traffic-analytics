@@ -12,6 +12,7 @@ RESULTS_DIR = ROOT / "results"       # 집계 결과 + 그래프 (IP 마스킹, 
 BIN_SECONDS = 60          # 집계 구간 (1분)
 SIGMA_K = 3.0             # 관리한계 = CL ± k·σ
 MIN_RTT_SAMPLES = 5       # 구간당 RTT 표본이 이보다 적으면 결측 처리
+RTT_MAX_VALID_S = 3.0     # 이보다 큰 ack_rtt 는 네트워크 RTT 로 볼 수 없어(RTO 이미 발생) 무효 표본 처리
 
 # tshark 로 뽑을 필드 (순서 = CSV 컬럼 순서)
 TSHARK_FIELDS = [
@@ -26,6 +27,9 @@ TSHARK_FIELDS = [
     "tcp.analysis.retransmission",
     "tcp.analysis.fast_retransmission",
     "tcp.analysis.spurious_retransmission",
+    "tcp.analysis.lost_segment",
+    "tcp.analysis.out_of_order",
+    "tcp.analysis.duplicate_ack",
     "dns.time",
     "dns.flags.response",
     "tcp.srcport",

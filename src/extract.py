@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from .config import TSHARK_FIELDS
+from .config import RTT_MAX_VALID_S, TSHARK_FIELDS
 
 _CANDIDATES = [
     r"C:\Program Files\Wireshark\tshark.exe",
@@ -60,14 +60,22 @@ def load_packets(csv_path: Path) -> pd.DataFrame:
     df = df.rename(columns={"_ws.col.Protocol": "protocol", "_ws.col.protocol": "protocol"})
     df["t"] = pd.to_numeric(df["frame.time_epoch"], errors="coerce")
     df["frame.len"] = pd.to_numeric(df["frame.len"], errors="coerce").fillna(0).astype(int)
-    df["ack_rtt"] = pd.to_numeric(df["tcp.analysis.ack_rtt"], errors="coerce")
+    df["ack_rtt_raw"] = pd.to_numeric(df["tcp.analysis.ack_rtt"], errors="coerce")
+    # RTO 가 이미 발생했을 시간(수 초)을 넘는 ack_rtt 는 keep-alive/캡처 드롭 등으로 생긴 무효 표본
+    df["rtt_invalid"] = df["ack_rtt_raw"] > RTT_MAX_VALID_S
+    df["ack_rtt"] = df["ack_rtt_raw"].where(~df["rtt_invalid"])
     df["dns_time"] = pd.to_numeric(df["dns.time"], errors="coerce")
     # FT_NONE 필드는 존재할 때만 값이 찍힌다 -> notna 로 판정
     for col, new in [
         ("tcp.analysis.retransmission", "is_retrans"),
         ("tcp.analysis.fast_retransmission", "is_fast_retrans"),
         ("tcp.analysis.spurious_retransmission", "is_spurious"),
+        ("tcp.analysis.lost_segment", "is_lost_seg"),
+        ("tcp.analysis.out_of_order", "is_ooo"),
+        ("tcp.analysis.duplicate_ack", "is_dupack"),
     ]:
+        if col not in df:
+            df[col] = pd.NA
         df[new] = df[col].notna() & (df[col].astype(str).str.strip() != "")
     df["is_tcp"] = df["tcp.stream"].notna()
     # 불리언 필드는 "True"/"False" 또는 "1"/"0" 으로 찍힌다

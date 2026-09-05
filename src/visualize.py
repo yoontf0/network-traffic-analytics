@@ -25,7 +25,7 @@ TEXT2 = "#52514e"
 SURFACE = "#fcfcfb"
 
 plt.rcParams.update({
-    "font.family": ["Malgun Gothic", "AppleGothic", "NanumGothic", "DejaVu Sans"],
+    "font.family": ["Malgun Gothic", "DejaVu Sans"],
     "axes.unicode_minus": False,
     "axes.edgecolor": GRID,
     "axes.labelcolor": TEXT2,
@@ -42,7 +42,22 @@ plt.rcParams.update({
 })
 
 
-def _ichart(ax, bins: pd.DataFrame, col: str, lim: dict, ylabel: str, title: str, unit: str):
+ACTIVITY_FILL = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100"]
+
+
+def _shade_activities(ax, activities):
+    """activities: [{"start_min", "end_min", "label"}] -> 배경 음영 + 상단 라벨."""
+    if not activities:
+        return
+    for i, a in enumerate(activities):
+        c = ACTIVITY_FILL[i % len(ACTIVITY_FILL)]
+        ax.axvspan(a["start_min"] - 0.5, a["end_min"] - 0.5, color=c, alpha=0.07, linewidth=0)
+        ax.text((a["start_min"] + a["end_min"]) / 2 - 0.5, 0.98, a["label"], transform=ax.get_xaxis_transform(),
+                ha="center", va="top", fontsize=8.5, color=TEXT2)
+
+
+def _ichart(ax, bins: pd.DataFrame, col: str, lim: dict, ylabel: str, title: str, unit: str, activities=None):
+    _shade_activities(ax, activities)
     x = bins["t_min"]
     y = bins[col]
     ax.plot(x, y, color=SERIES[0], linewidth=2, marker="o", markersize=4, label=ylabel)
@@ -66,24 +81,24 @@ def _ichart(ax, bins: pd.DataFrame, col: str, lim: dict, ylabel: str, title: str
     ax.set_xlabel("캡처 경과 시간 [분]")
     ax.set_ylabel(ylabel)
     ax.set_title(title, loc="left", fontsize=12, color=TEXT, fontweight="bold")
-    ax.legend(loc="upper left", frameon=False, fontsize=9)
+    ax.legend(loc="upper left", frameon=False, fontsize=9, bbox_to_anchor=(0, 0.93))
     ax.margins(x=0.02)
     ax.set_xlim(left=-0.5, right=xmax + 0.5)
 
 
-def plot_rtt_ichart(bins: pd.DataFrame, lim: dict, out: Path):
+def plot_rtt_ichart(bins: pd.DataFrame, lim: dict, out: Path, activities=None):
     fig, ax = plt.subplots(figsize=(11, 4.2))
     _ichart(ax, bins, "rtt_mean", lim, "평균 RTT [ms]",
-            "TCP RTT (1분 평균) - I-Chart, 중심선 ± 3σ", " ms")
+            "TCP RTT (1분 평균) - I-Chart, 중심선 ± 3σ", " ms", activities)
     fig.tight_layout()
     fig.savefig(out)
     plt.close(fig)
 
 
-def plot_retrans_ichart(bins: pd.DataFrame, lim: dict, out: Path):
+def plot_retrans_ichart(bins: pd.DataFrame, lim: dict, out: Path, activities=None):
     fig, ax = plt.subplots(figsize=(11, 4.2))
     _ichart(ax, bins, "retrans_rate", lim, "TCP 재전송률 [%]",
-            "TCP 재전송률 (1분 구간) - I-Chart, 중심선 ± 3σ", " %")
+            "TCP 재전송률 (1분 구간) - I-Chart, 중심선 ± 3σ", " %", activities)
     fig.tight_layout()
     fig.savefig(out)
     plt.close(fig)

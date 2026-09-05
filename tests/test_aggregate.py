@@ -12,7 +12,8 @@ def _pkt(t, src, dst, length=100, proto="TCP", stream=0, ack_rtt=None, retrans=F
     return {
         "t": t, "ip.src": src, "ip.dst": dst, "frame.len": length, "protocol": proto,
         "tcp.stream": stream, "ack_rtt": ack_rtt, "is_retrans": retrans, "is_fast_retrans": False,
-        "is_spurious": False, "is_tcp": stream is not None, "dns_time": dns_time, "is_dns_resp": bool(dns_resp),
+        "is_spurious": False, "is_lost_seg": False, "is_ooo": False, "is_dupack": False, "rtt_invalid": False,
+        "is_tcp": stream is not None, "dns_time": dns_time, "is_dns_resp": bool(dns_resp),
     }
 
 

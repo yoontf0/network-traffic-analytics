@@ -40,12 +40,19 @@ def i_chart_limits(values, k: float = SIGMA_K, floor_at_zero: bool = True) -> di
     }
 
 
-def apply_i_chart(bins: pd.DataFrame, col: str, k: float = SIGMA_K) -> tuple[pd.DataFrame, dict]:
-    """bins[col] 에 I-chart 적용. `<col>_ooc` (out-of-control) 불리언 컬럼 추가."""
+def apply_i_chart(bins: pd.DataFrame, col: str, k: float = SIGMA_K, upper_only: bool = True) -> tuple[pd.DataFrame, dict]:
+    """bins[col] 에 I-chart 적용. `<col>_ooc` (out-of-control) 불리언 컬럼 추가.
+
+    upper_only=True: RTT/재전송률처럼 '낮을수록 좋은' 지표는 UCL 초과만 품질 이상으로 본다
+    (LCL 아래 = 평소보다 좋은 상태이므로 경보 대상이 아님).
+    """
     lim = i_chart_limits(bins[col], k=k)
     out = bins.copy()
     v = out[col]
-    out[f"{col}_ooc"] = v.notna() & ((v > lim["ucl"]) | (v < lim["lcl"]))
+    if upper_only:
+        out[f"{col}_ooc"] = v.notna() & (v > lim["ucl"])
+    else:
+        out[f"{col}_ooc"] = v.notna() & ((v > lim["ucl"]) | (v < lim["lcl"]))
     return out, lim
 
 
