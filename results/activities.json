@@ -1,5 +1,5 @@
 [
-  {"start_min": 0,  "end_min": 13, "label": "웹 서핑"},
-  {"start_min": 13, "end_min": 23, "label": "유튜브 스트리밍"},
-  {"start_min": 23, "end_min": 30, "label": "Ubuntu ISO 다운로드"}
+  {"start_min": 0,  "end_min": 10, "label": "웹 서핑"},
+  {"start_min": 10, "end_min": 20, "label": "유튜브 스트리밍"},
+  {"start_min": 20, "end_min": 30, "label": "Ubuntu ISO 다운로드 (+웹 서핑)"}
 ]

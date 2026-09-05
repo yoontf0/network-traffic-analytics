@@ -40,19 +40,30 @@ def i_chart_limits(values, k: float = SIGMA_K, floor_at_zero: bool = True) -> di
     }
 
 
-def apply_i_chart(bins: pd.DataFrame, col: str, k: float = SIGMA_K, upper_only: bool = True) -> tuple[pd.DataFrame, dict]:
-    """bins[col] 에 I-chart 적용. `<col>_ooc` (out-of-control) 불리언 컬럼 추가.
+def apply_i_chart(
+    bins: pd.DataFrame,
+    col: str,
+    k: float = SIGMA_K,
+    upper_only: bool = True,
+    baseline_mask: pd.Series | None = None,
+    suffix: str = "",
+) -> tuple[pd.DataFrame, dict]:
+    """bins[col] 에 I-chart 적용. `<col>_ooc<suffix>` (out-of-control) 불리언 컬럼 추가.
 
     upper_only=True: RTT/재전송률처럼 '낮을수록 좋은' 지표는 UCL 초과만 품질 이상으로 본다
     (LCL 아래 = 평소보다 좋은 상태이므로 경보 대상이 아님).
+    baseline_mask: 주어지면 관리한계를 그 구간(Phase I, 정상 기준선)에서만 추정하고
+    전체 구간에 적용한다(Phase II). None 이면 전체 구간에서 추정(자기 자신 대비).
     """
-    lim = i_chart_limits(bins[col], k=k)
+    src = bins[col] if baseline_mask is None else bins.loc[baseline_mask, col]
+    lim = i_chart_limits(src, k=k)
+    lim["baseline_bins"] = int(src.notna().sum())
     out = bins.copy()
     v = out[col]
     if upper_only:
-        out[f"{col}_ooc"] = v.notna() & (v > lim["ucl"])
+        out[f"{col}_ooc{suffix}"] = v.notna() & (v > lim["ucl"])
     else:
-        out[f"{col}_ooc"] = v.notna() & ((v > lim["ucl"]) | (v < lim["lcl"]))
+        out[f"{col}_ooc{suffix}"] = v.notna() & ((v > lim["ucl"]) | (v < lim["lcl"]))
     return out, lim
 
 

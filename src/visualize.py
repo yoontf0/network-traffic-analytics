@@ -81,7 +81,7 @@ def _ichart(ax, bins: pd.DataFrame, col: str, lim: dict, ylabel: str, title: str
     ax.set_xlabel("캡처 경과 시간 [분]")
     ax.set_ylabel(ylabel)
     ax.set_title(title, loc="left", fontsize=12, color=TEXT, fontweight="bold")
-    ax.legend(loc="upper left", frameon=False, fontsize=9, bbox_to_anchor=(0, 0.93))
+    ax.legend(loc="best", bbox_to_anchor=(0, 0, 1, 0.88), frameon=True, framealpha=0.85, edgecolor=GRID, fontsize=9)
     ax.margins(x=0.02)
     ax.set_xlim(left=-0.5, right=xmax + 0.5)
 

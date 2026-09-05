@@ -25,7 +25,7 @@ def test_rtt_uses_only_incoming_acks_and_retrans_rate():
         rows.append(_pkt(i + 0.5, MY, SRV, ack_rtt=0.200))
     # bin 1: TCP 10개 중 재전송 2개 -> 20%
     for i in range(10):
-        rows.append(_pkt(60 + i, SRV, MY, retrans=(i < 2)))
+        rows.append(_pkt(60 + i * 6, SRV, MY, retrans=(i < 2)))  # 1분 구간을 충분히 채움
     # DNS 응답
     rows.append(_pkt(61, "8.8.8.8", MY, proto="DNS", stream=None, dns_time=0.030, dns_resp=1))
     df = pd.DataFrame(rows)
@@ -58,3 +58,10 @@ def test_mask_ip():
     assert mask_ip("142.250.196.110") == "142.250.x.x"
     assert mask_ip(None) == "unknown"
     assert mask_ip("2001:db8::1").startswith("2001:0db8:")
+
+
+def test_trailing_partial_bin_is_dropped():
+    rows = [_pkt(i * 6, SRV, MY) for i in range(10)]     # bin 0: 0~54 s
+    rows.append(_pkt(60.0, SRV, MY))                      # bin 1: 패킷 1개 (duration 경계 꼬리)
+    bins = aggregate_bins(pd.DataFrame(rows), MY)
+    assert len(bins) == 1

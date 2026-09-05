@@ -44,6 +44,7 @@ def aggregate_bins(df: pd.DataFrame, my_ip: str) -> pd.DataFrame:
     df["dir"] = _direction(df, my_ip)
 
     tcp = df[df["is_tcp"]].copy()
+    tcp["ack_rtt"] = pd.to_numeric(tcp["ack_rtt"], errors="coerce")
     tcp["is_loss_retrans"] = tcp["is_retrans"] | tcp["is_fast_retrans"]
 
     # RTT: 내 호스트로 들어오는 ACK 에 찍힌 ack_rtt 만 (서버 왕복 시간)
@@ -69,7 +70,8 @@ def aggregate_bins(df: pd.DataFrame, my_ip: str) -> pd.DataFrame:
     })
     re_df["retrans_rate"] = re_df["retrans_pkts"] / re_df["tcp_pkts"].replace(0, np.nan) * 100
 
-    dns = df[df["is_dns_resp"] & df["dns_time"].notna()]
+    dns = df[df["is_dns_resp"] & df["dns_time"].notna()].copy()
+    dns["dns_time"] = pd.to_numeric(dns["dns_time"], errors="coerce")
     dns_g = dns.groupby("bin")["dns_time"]
     dns_df = pd.DataFrame({
         "dns_n": dns_g.size(),
@@ -89,7 +91,12 @@ def aggregate_bins(df: pd.DataFrame, my_ip: str) -> pd.DataFrame:
     })
     thr["throughput_total"] = thr["throughput_down"] + thr["throughput_up"]
 
-    all_bins = pd.RangeIndex(0, int(df["bin"].max()) + 1, name="bin")
+    # 마지막 구간이 몇 초짜리 꼬리(예: duration 경계의 패킷 1개)면 제외
+    last_bin = int(df["bin"].max())
+    tail_span = float(df["t"].max() - (df["t"].min() + last_bin * BIN_SECONDS))
+    if last_bin > 0 and tail_span < BIN_SECONDS * 0.25:
+        last_bin -= 1
+    all_bins = pd.RangeIndex(0, last_bin + 1, name="bin")
     out = pd.DataFrame(index=all_bins).join([thr, rtt_df, re_df, dns_df])
     for c in COUNT_COLS:
         if c not in out:

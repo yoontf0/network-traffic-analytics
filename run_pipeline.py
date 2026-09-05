@@ -38,6 +38,8 @@ def main() -> None:
     ap.add_argument("--activities", type=Path, default=None,
                     help='활동 구간 JSON [{"start_min":0,"end_min":13,"label":"웹 서핑"}, ...]')
     ap.add_argument("--dropped", type=int, default=None, help="캡처 도중 dumpcap 이 드롭한 패킷 수 (capture_log 참조)")
+    ap.add_argument("--baseline", type=str, default=None,
+                    help='Phase II 방식: 관리한계를 이 구간(분, 예 "0-20")에서만 추정해 전체에 적용 (요약에만 추가 보고)')
     args = ap.parse_args()
 
     if not args.pcap and not args.csv:
@@ -61,12 +63,28 @@ def main() -> None:
     print("[3/5] 1분 구간 집계")
     bins = aggregate_bins(df, my_ip)
     total_mix, per_bin_mix = protocol_mix(df)
+    per_bin_mix = per_bin_mix.loc[per_bin_mix.index <= bins["bin"].max()]  # 꼬리 구간 정합
 
     print(f"[4/5] I-chart (+{SIGMA_K:g}σ, UCL 초과 = 이상)")
     bins, rtt_lim = apply_i_chart(bins, "rtt_mean")
     bins, re_lim = apply_i_chart(bins, "retrans_rate")
     rtt_segs = ooc_segments(bins, "rtt_mean")
     re_segs = ooc_segments(bins, "retrans_rate")
+    baseline = None
+    if args.baseline:
+        b0, b1 = (float(x) for x in args.baseline.split("-"))
+        mask = (bins["t_min"] >= b0) & (bins["t_min"] < b1)
+        bins, rtt_lim_b = apply_i_chart(bins, "rtt_mean", baseline_mask=mask, suffix="_baseline")
+        bins, re_lim_b = apply_i_chart(bins, "retrans_rate", baseline_mask=mask, suffix="_baseline")
+        baseline = {
+            "window_min": [b0, b1],
+            "rtt_mean": {k: (round(v, 4) if isinstance(v, float) else v) for k, v in rtt_lim_b.items()},
+            "retrans_rate": {k: (round(v, 4) if isinstance(v, float) else v) for k, v in re_lim_b.items()},
+            "ooc_rtt_bins": int(bins["rtt_mean_ooc_baseline"].sum()),
+            "ooc_retrans_bins": int(bins["retrans_rate_ooc_baseline"].sum()),
+            "ooc_rtt_bin_list": [int(b) for b in bins.loc[bins["rtt_mean_ooc_baseline"], "bin"]],
+            "ooc_retrans_bin_list": [int(b) for b in bins.loc[bins["retrans_rate_ooc_baseline"], "bin"]],
+        }
 
     out = args.out
     out.mkdir(parents=True, exist_ok=True)
@@ -152,6 +170,7 @@ def main() -> None:
         "ooc_rtt_segments": _seg_info(rtt_segs),
         "ooc_retrans_segments": _seg_info(re_segs),
         "protocol_mix_bytes_pct": {r["group"]: round(r["bytes_pct"], 2) for _, r in total_mix.iterrows()},
+        "ichart_baseline_phase2": baseline,
         "activities": activities,
     }
     (out / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -162,6 +181,9 @@ def main() -> None:
             print(f"  {k}: {v}")
     print(f"  I-chart RTT: CL={rtt_lim['center']:.2f} ms, UCL={rtt_lim['ucl']:.2f} ms, 이탈 {summary['ooc_rtt_bins']}구간")
     print(f"  I-chart 재전송률: CL={re_lim['center']:.3f} %, UCL={re_lim['ucl']:.3f} %, 이탈 {summary['ooc_retrans_bins']}구간")
+    if baseline:
+        print(f"  [Phase II 기준선 {args.baseline}분] RTT UCL={baseline['rtt_mean']['ucl']:.2f} ms 이탈 {baseline['ooc_rtt_bins']}구간 {baseline['ooc_rtt_bin_list']}"
+              f" | 재전송률 UCL={baseline['retrans_rate']['ucl']:.3f} % 이탈 {baseline['ooc_retrans_bins']}구간 {baseline['ooc_retrans_bin_list']}")
 
 
 if __name__ == "__main__":
